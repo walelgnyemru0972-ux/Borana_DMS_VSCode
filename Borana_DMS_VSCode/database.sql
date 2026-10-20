@@ -1,0 +1,49 @@
+CREATE DATABASE IF NOT EXISTS borana_dms
+  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE borana_dms;
+
+CREATE TABLE IF NOT EXISTS users (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  full_name VARCHAR(150) NOT NULL,
+  username VARCHAR(60) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  role ENUM('admin','manager','proctor') NOT NULL DEFAULT 'proctor',
+  active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS blocks (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  block_number VARCHAR(40) NOT NULL UNIQUE,
+  sex_category ENUM('Male','Female') NOT NULL,
+  faculty VARCHAR(120) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS rooms (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  block_id INT UNSIGNED NOT NULL,
+  room_number VARCHAR(40) NOT NULL,
+  capacity TINYINT UNSIGNED NOT NULL DEFAULT 4,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_rooms_block FOREIGN KEY (block_id) REFERENCES blocks(id) ON DELETE RESTRICT,
+  UNIQUE KEY uq_room_per_block (block_id, room_number),
+  CONSTRAINT chk_room_capacity CHECK (capacity BETWEEN 1 AND 6)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS students (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  student_id VARCHAR(60) NOT NULL UNIQUE,
+  first_name VARCHAR(80) NOT NULL,
+  middle_name VARCHAR(80) NULL,
+  last_name VARCHAR(80) NOT NULL,
+  sex ENUM('Male','Female') NOT NULL,
+  batch VARCHAR(50) NULL,
+  department VARCHAR(120) NOT NULL,
+  password_hash VARCHAR(255) NULL,
+  room_id INT UNSIGNED NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_students_room FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE SET NULL,
+  INDEX idx_students_room (room_id),
+  INDEX idx_students_name (last_name, first_name)
+) ENGINE=InnoDB;
